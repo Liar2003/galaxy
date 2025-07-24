@@ -172,14 +172,6 @@
                 }
             }
         </style>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700&display=swap"
-            rel="stylesheet"
-        />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
-            rel="stylesheet"
-        />
     </head>
     <body>
         <div id="title">My Love in the Stars</div>
@@ -188,11 +180,8 @@
         <div id="music-control"></div>
         <audio id="background-music" src="galaxy.mp3" autoplay loop></audio>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
-
+        <script src="js/three.min.js"></script>
+        <script src="js/OrbitControls.js"></script>
         <script id="sunVertexShader" type="x-shader/x-vertex">
             varying vec2 vUv;
             void main() {
@@ -719,11 +708,12 @@
             }
 
             function createCometSystem() {
-                const cometCount = 1000;
+                const cometCount = 2000;
                 const files = [
-                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQa7QhTV4itAAl0-9v5272me-6UnT-Am9HFg&s",
-                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYLR1Okspw4vZaDtFqLb62bQ_MgnUjIJ_4og&s",
-                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj08AlJ4NV8dVaBn5j3qIHtajh3l5PRkPn9w&s",
+                    "assets/1.jpeg",
+                    "assets/2.jpeg",
+                    "assets/3.jpeg",
+                    "assets/4.jpeg",
                 ];
                 for (let i = 0; i < cometCount; i++) {
                     const imageUrl = files[i % files.length];
