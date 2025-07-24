@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#000000" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
+
+        <title>Romantic Space Journey for My Love</title>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+                background: linear-gradient(
+                    to bottom,
+                    #000000,
+                    #0a0a2a,
+                    #000033
+                );
+                font-family: "Playfair Display", serif;
+                height: 100vh;
+                perspective: 1000px;
+            }
+            canvas {
+                display: block;
+            }
+            #info {
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                color: #ffb6c1;
+                z-index: 100;
+                font-size: 18px;
+                pointer-events: none;
+                text-shadow: 0 0 10px rgba(255, 105, 180, 0.8);
+                font-weight: 500;
+                letter-spacing: 1px;
+            }
+            #upload-container {
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                z-index: 101;
+                background: rgba(25, 25, 35, 0.7);
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: 0 0 20px rgba(255, 182, 193, 0.4);
+                backdrop-filter: blur(5px);
+                border: 1px solid rgba(255, 182, 193, 0.3);
+            }
+            #imageUploadLabel {
+                padding: 12px 20px;
+                background: linear-gradient(45deg, #ff6ec4, #7873f5);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: block;
+                font-weight: 500;
+                font-size: 16px;
+                letter-spacing: 0.5px;
+                box-shadow: 0 4px 15px rgba(255, 110, 196, 0.4);
+            }
+            #imageUploadLabel:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 110, 196, 0.6);
+            }
+            #imageUpload {
+                display: none;
+            }
+            #title {
+                position: absolute;
+                top: 20px;
+                width: 100%;
+                text-align: center;
+                color: #ffb6c1;
+                z-index: 100;
+                font-size: 36px;
+                pointer-events: none;
+                text-shadow: 0 0 15px rgba(255, 105, 180, 0.9);
+                font-family: "Dancing Script", cursive;
+                letter-spacing: 2px;
+                animation: pulse 3s infinite;
+            }
+            #heart {
+                position: absolute;
+                bottom: 30px;
+                right: 30px;
+                color: #ff6ec4;
+                font-size: 28px;
+                z-index: 100;
+                animation: heartbeat 1.2s infinite;
+            }
+            #message {
+                position: absolute;
+                bottom: 30px;
+                left: 30px;
+                color: #a2d5f2;
+                font-size: 18px;
+                max-width: 300px;
+                background: rgba(25, 25, 35, 0.6);
+                padding: 15px;
+                border-radius: 10px;
+                border-left: 3px solid #ff6ec4;
+                line-height: 1.6;
+                font-family: "Playfair Display", serif;
+                backdrop-filter: blur(5px);
+            }
+            .heart-trail {
+                position: absolute;
+                color: #ff6ec4;
+                font-size: 24px;
+                z-index: 99;
+                pointer-events: none;
+                opacity: 0;
+                animation: fadeHeart 1.5s ease-out;
+            }
+            #music-control {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                z-index: 101;
+                cursor: pointer;
+                font-size: 24px;
+                color: #ffb6c1;
+                text-shadow: 0 0 10px rgba(255, 105, 180, 0.8);
+            }
+            @keyframes pulse {
+                0% {
+                    opacity: 0.8;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0.8;
+                }
+            }
+            @keyframes heartbeat {
+                0% {
+                    transform: scale(1);
+                }
+                25% {
+                    transform: scale(1.1);
+                }
+                50% {
+                    transform: scale(1);
+                }
+                75% {
+                    transform: scale(1.1);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            @keyframes fadeHeart {
+                0% {
+                    transform: translate(0, 0) scale(0.8);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--tx), var(--ty)) scale(0.2);
+                    opacity: 0;
+                }
+            }
+        </style>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div id="title">My Love in the Stars</div>
+
+        <div id="heart">❤</div>
+        <div id="music-control"></div>
+        <audio id="background-music" src="/galaxy.mp3" autoplay loop></audio>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+
+        <script id="sunVertexShader" type="x-shader/x-vertex">
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        </script>
+        <script id="sunFragmentShader" type="x-shader/x-fragment">
+            uniform float time;
+            uniform vec2 resolution;
+            varying vec2 vUv;
+
+            float random (in vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+
+            float noise (in vec2 st) {
+                vec2 i = floor(st);
+                vec2 f = fract(st);
+                float a = random(i);
+                float b = random(i + vec2(1.0, 0.0));
+                float c = random(i + vec2(0.0, 1.0));
+                float d = random(i + vec2(1.0, 1.0));
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+            }
+
+            float fbm(in vec2 st) {
+                float value = 0.0;
+                float amplitude = .5;
+                float frequency = 0.;
+                for (int i = 0; i < 6; i++) {
+                    value += amplitude * noise(st);
+                    st *= 2.;
+                    amplitude *= .5;
+                }
+                return value;
+            }
+
+            void main() {
+                vec2 st = vUv * 5.0;
+                st.x += time * 0.05;
+                vec3 color = vec3(0.0);
+                float n = fbm(st + time * 0.1);
+                color = mix(vec3(1.0, 0.9, 0.2), vec3(1.0, 0.2, 0.0), n);
+                float n2 = fbm(st * 2.0 + time * 0.2);
+                color = mix(color, vec3(0.8, 0.1, 0.0), n2 * 0.5);
+                gl_FragColor = vec4(color, 1.0);
+            }
+        </script>
+
+        <script id="coronaVertexShader" type="x-shader/x-vertex">
+            varying vec3 vNormal;
+            void main() {
+                vNormal = normalize(normalMatrix * normal);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        </script>
+        <script id="coronaFragmentShader" type="x-shader/x-fragment">
+            varying vec3 vNormal;
+            void main() {
+                float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+                gl_FragColor = vec4(1.0, 0.6, 0.2, 1.0) * intensity;
+            }
+        </script>
+
+        <script>
+            let scene, camera, renderer, controls;
+            const textureLoader = new THREE.TextureLoader();
+            const textRings = [];
+            let earth, sun;
+            let comets = [];
+            let stars, fallingStars;
+            let heartTrails = [];
+            let cameraPath;
+            let cameraAnimationProgress = 0;
+            let animationComplete = false;
+
+            const cometSystemRadius = 18;
+            const cometSystemThickness = 10;
+
+            init();
+            animate();
+
+            function init() {
+                // Scene setup
+                scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x0a0a2a, 0.002);
+
+                // Camera setup
+                camera = new THREE.PerspectiveCamera(
+                    75,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    2000
+                );
+                camera.position.set(0, 5, 10);
+
+                // Renderer setup
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setClearColor(0x000000, 0);
+                document.body.appendChild(renderer.domElement);
+
+                // Controls setup
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = 10;
+                controls.maxDistance = 300;
+                controls.enabled = false;
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x333344, 0.8);
+                scene.add(ambientLight);
+
+                // Create objects
+                createSun();
+                createStars();
+                createFallingStars();
+                createEarth();
+                createTextRings();
+                createCometSystem();
+                createHearts();
+                createCameraPath();
+
+                // Event listeners
+                window.addEventListener("resize", onWindowResize, false);
+                // document.getElementById('imageUpload').addEventListener('change', handleImageUploads);
+                document.addEventListener("mousemove", createHeartTrail);
+                document
+                    .getElementById("music-control")
+                    .addEventListener("click", toggleMusic);
+
+                // Autoplay music handler
+                document.addEventListener("DOMContentLoaded", () => {
+                    const music = document.getElementById("background-music");
+                    const control = document.getElementById("music-control");
+
+                    // Try autoplay immediately
+                    music
+                        .play()
+                        .then(() => {
+                            control.innerHTML = ""; // Playing
+                        })
+                        .catch(() => {
+                            // Autoplay blocked — wait for user click
+                            document.body.addEventListener(
+                                "click",
+                                () => {
+                                    if (music.paused) {
+                                        music.play();
+                                        control.innerHTML = "";
+                                    }
+                                },
+                                { once: true }
+                            );
+                        });
+                });
+            }
+
+            function createCameraPath() {
+                cameraPath = new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(0, 0, 10), // Start near Earth
+                    new THREE.Vector3(0, 0, 15),
+                    new THREE.Vector3(0, 0, 25),
+                    new THREE.Vector3(0, 1, 35), // Move through comets
+                    new THREE.Vector3(0, 10, 40),
+                ]);
+            }
+
+            function createHearts() {
+                const heartCount = 100;
+                const heartMaterial = new THREE.SpriteMaterial({
+                    map: createHeartTexture(),
+                    transparent: true,
+                });
+
+                for (let i = 0; i < heartCount; i++) {
+                    const heart = new THREE.Sprite(heartMaterial);
+                    positionHeart(heart);
+                    scene.add(heart);
+                    heartTrails.push(heart);
+                }
+            }
+
+            function createHeartTexture() {
+                const canvas = document.createElement("canvas");
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext("2d");
+
+                ctx.fillStyle = "#ff6ec4";
+                ctx.beginPath();
+                ctx.moveTo(32, 12);
+                ctx.bezierCurveTo(32, 12, 44, 0, 56, 8);
+                ctx.bezierCurveTo(56, 8, 64, 20, 56, 32);
+                ctx.bezierCurveTo(56, 32, 48, 44, 32, 56);
+                ctx.bezierCurveTo(16, 44, 8, 32, 8, 32);
+                ctx.bezierCurveTo(0, 20, 8, 8, 8, 8);
+                ctx.bezierCurveTo(20, 0, 32, 12, 32, 12);
+                ctx.fill();
+
+                const texture = new THREE.CanvasTexture(canvas);
+                return texture;
+            }
+
+            function positionHeart(heart) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 20 + Math.random() * 50;
+                const height = (Math.random() - 0.5) * 20;
+
+                heart.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+
+                const scale = 0.5 + Math.random() * 1.5;
+                heart.scale.set(scale, scale, scale);
+
+                heart.userData = {
+                    speed: Math.random() * 0.005 + 0.001,
+                    angle: angle,
+                    radius: radius,
+                    height: height,
+                    pulseSpeed: Math.random() * 0.02 + 0.01,
+                    pulseDirection: 1,
+                    opacity: Math.random() * 0.5 + 0.5,
+                };
+            }
+
+            function createSun() {
+                const sunGeometry = new THREE.SphereGeometry(12, 64, 64);
+                const sunUniforms = {
+                    time: { value: 1.0 },
+                    resolution: { value: new THREE.Vector2() },
+                };
+                const sunMaterial = new THREE.ShaderMaterial({
+                    uniforms: sunUniforms,
+                    vertexShader:
+                        document.getElementById("sunVertexShader").textContent,
+                    fragmentShader:
+                        document.getElementById("sunFragmentShader")
+                            .textContent,
+                });
+                sun = new THREE.Mesh(sunGeometry, sunMaterial);
+                sun.position.set(-60, 20, -100);
+                scene.add(sun);
+
+                const coronaGeometry = new THREE.SphereGeometry(14, 64, 64);
+                const coronaMaterial = new THREE.ShaderMaterial({
+                    vertexShader:
+                        document.getElementById("coronaVertexShader")
+                            .textContent,
+                    fragmentShader: document.getElementById(
+                        "coronaFragmentShader"
+                    ).textContent,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.BackSide,
+                });
+                const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
+                corona.position.copy(sun.position);
+                scene.add(corona);
+
+                const sunLight = new THREE.PointLight(0xffdd99, 1.8, 600);
+                sunLight.position.copy(sun.position);
+                scene.add(sunLight);
+            }
+
+            function createStars() {
+                const starVertices = [];
+                const starColors = [];
+
+                for (let i = 0; i < 200000; i++) {
+                    starVertices.push(THREE.MathUtils.randFloatSpread(3000));
+                    starVertices.push(THREE.MathUtils.randFloatSpread(3000));
+                    starVertices.push(THREE.MathUtils.randFloatSpread(3000));
+
+                    const colorIntensity = Math.random() * 0.8 + 0.2;
+                    const colorChoice = Math.random();
+                    let r, g, b;
+
+                    if (colorChoice < 0.7) {
+                        r = 1 * colorIntensity;
+                        g = 0.9 * colorIntensity;
+                        b = 0.8 * colorIntensity;
+                    } else if (colorChoice < 0.85) {
+                        r = 0.6 * colorIntensity;
+                        g = 0.7 * colorIntensity;
+                        b = 1 * colorIntensity;
+                    } else {
+                        r = 1 * colorIntensity;
+                        g = 0.6 * colorIntensity;
+                        b = 0.6 * colorIntensity;
+                    }
+                    starColors.push(r, g, b);
+                }
+
+                const starGeometry = new THREE.BufferGeometry();
+                starGeometry.setAttribute(
+                    "position",
+                    new THREE.Float32BufferAttribute(starVertices, 3)
+                );
+                starGeometry.setAttribute(
+                    "color",
+                    new THREE.Float32BufferAttribute(starColors, 3)
+                );
+
+                const starMaterial = new THREE.PointsMaterial({
+                    size: 1.2,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.9,
+                });
+
+                stars = new THREE.Points(starGeometry, starMaterial);
+                scene.add(stars);
+            }
+
+            // ## NEW Falling Stars Function ##
+            function createFallingStars() {
+                const starCount = 200;
+                const positions = [];
+                const velocities = [];
+
+                for (let i = 0; i < starCount; i++) {
+                    positions.push(
+                        THREE.MathUtils.randFloatSpread(1000),
+                        THREE.MathUtils.randFloat(500, 1000), // Start high up
+                        THREE.MathUtils.randFloatSpread(1000)
+                    );
+                    velocities.push(0, -Math.random() * 2 - 1, 0); // Fall downwards
+                }
+
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute(
+                    "position",
+                    new THREE.Float32BufferAttribute(positions, 3)
+                );
+                geometry.setAttribute(
+                    "velocity",
+                    new THREE.Float32BufferAttribute(velocities, 3)
+                );
+
+                const material = new THREE.PointsMaterial({
+                    color: 0xffffff,
+                    size: 3,
+                    transparent: true,
+                    opacity: 0.7,
+                    blending: THREE.AdditiveBlending,
+                });
+
+                fallingStars = new THREE.Points(geometry, material);
+                scene.add(fallingStars);
+            }
+
+            function createEarth() {
+                const earthTexture = textureLoader.load(
+                    "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
+                );
+                const earthBump = textureLoader.load(
+                    "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg"
+                );
+                const earthSpec = textureLoader.load(
+                    "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg"
+                );
+
+                const geometry = new THREE.SphereGeometry(5, 64, 64);
+                const material = new THREE.MeshPhongMaterial({
+                    map: earthTexture,
+                    bumpMap: earthBump,
+                    bumpScale: 0.05,
+                    specularMap: earthSpec,
+                    specular: new THREE.Color(0x333333),
+                    shininess: 5,
+                });
+                earth = new THREE.Mesh(geometry, material);
+
+                const cloudTexture = textureLoader.load(
+                    "https://threejs.org/examples/textures/planets/earth_clouds_1024.png"
+                );
+                const cloudGeometry = new THREE.SphereGeometry(5.05, 64, 64);
+                const cloudMaterial = new THREE.MeshPhongMaterial({
+                    map: cloudTexture,
+                    transparent: true,
+                    opacity: 0.4,
+                });
+                const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                earth.add(clouds);
+                scene.add(earth);
+
+                const atmosphereGeometry = new THREE.SphereGeometry(
+                    5.15,
+                    64,
+                    64
+                );
+                const atmosphereMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x88ccff,
+                    transparent: true,
+                    opacity: 0.1,
+                    shininess: 0,
+                });
+                const atmosphere = new THREE.Mesh(
+                    atmosphereGeometry,
+                    atmosphereMaterial
+                );
+                earth.add(atmosphere);
+            }
+
+            function createTextRing(text, radius, color, rotation, font) {
+                const group = new THREE.Group();
+                const chars = text.split("");
+                const angleStep = (Math.PI * 2) / chars.length;
+
+                chars.forEach((char, i) => {
+                    if (char.trim() !== "") {
+                        const geometry = new THREE.TextGeometry(char, {
+                            font: font,
+                            size: 0.3,
+                            height: 0.1,
+                            curveSegments: 12,
+                        });
+                        geometry.computeBoundingBox();
+                        const centerOffset =
+                            -0.5 *
+                            (geometry.boundingBox.max.x -
+                                geometry.boundingBox.min.x);
+                        const material = new THREE.MeshPhongMaterial({
+                            color: color,
+                            emissive: color,
+                            emissiveIntensity: 0.3,
+                            shininess: 100,
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.x = centerOffset;
+
+                        const angle = i * angleStep;
+                        const x = Math.cos(angle) * radius;
+                        const z = Math.sin(angle) * radius;
+                        mesh.position.set(x, 0, z);
+                        mesh.rotation.y = -angle + Math.PI / 2;
+
+                        const glowGeometry = new THREE.TextGeometry(char, {
+                            font: font,
+                            size: 0.31,
+                            height: 0.05,
+                            curveSegments: 8,
+                        });
+                        const glowMaterial = new THREE.MeshBasicMaterial({
+                            color: color,
+                            transparent: true,
+                            opacity: 0.3,
+                        });
+                        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                        glow.position.x = centerOffset;
+                        glow.position.set(x, 0, z);
+                        glow.rotation.y = -angle + Math.PI / 2;
+
+                        group.add(glow);
+                        group.add(mesh);
+                    }
+                });
+
+                group.rotation.copy(rotation);
+                scene.add(group);
+                textRings.push({
+                    group: group,
+                    rotationSpeed:
+                        (Math.random() * 0.009 + 0.001) *
+                        (Math.random() > 0.5 ? 1 : -1),
+                    tiltSpeed: Math.random() * 0.0001,
+                });
+            }
+
+            function createTextRings() {
+                const loader = new THREE.FontLoader();
+                loader.load(
+                    "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
+                    (font) => {
+                        const ringData = [
+                            {
+                                text: ".YAD ELGNIS HCAE EURT EMOC MAERD YM YOJ YM ,ECAEP YM ER’UOY — LUOS RUOY ,ECIOV RUOY ,ELIMS ROUY EVOL I",
+                                radius: 7,
+                                color: 0xff6ec4,
+                                rotation: new THREE.Euler(0, 0, 0),
+                            },
+                            {
+                                text: ".UOY ROFPEED EVAH I EVOL EHT FO ESUACEB LLA S’T I ,EKAT I HTAERB YREVE ,LEEF I TAEBTRA EH YREVE",
+                                radius: 7.5,
+                                color: 0xa2d5f2,
+                                rotation: new THREE.Euler(
+                                    Math.PI / 8,
+                                    Math.PI / 8,
+                                    0
+                                ),
+                            },
+                            {
+                                text: " .EFIL LUFTUAEB SIHT NI REVEROF YM DNA ,MROTS EHT NI MLAC YM ,NIAR EHT NI ENIHSNUS YM ERA UOY",
+                                radius: 8,
+                                color: 0x98fb98,
+                                rotation: new THREE.Euler(
+                                    Math.PI / 2,
+                                    -Math.PI / 2,
+                                    0
+                                ),
+                            },
+                        ];
+                        ringData.forEach((data) =>
+                            createTextRing(
+                                data.text,
+                                data.radius,
+                                data.color,
+                                data.rotation,
+                                font
+                            )
+                        );
+                    }
+                );
+            }
+
+            function createCometSystem() {
+                const cometCount = 1000;
+                const files = [
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQa7QhTV4itAAl0-9v5272me-6UnT-Am9HFg&s",
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYLR1Okspw4vZaDtFqLb62bQ_MgnUjIJ_4og&s",
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj08AlJ4NV8dVaBn5j3qIHtajh3l5PRkPn9w&s",
+                ];
+                for (let i = 0; i < cometCount; i++) {
+                    const imageUrl = files[i % files.length];
+                    textureLoader.load(imageUrl, (texture) => {
+                        const material = new THREE.SpriteMaterial({
+                            map: texture,
+                            transparent: true,
+                            opacity: 0.9,
+                        });
+                        const comet = new THREE.Sprite(material);
+                        positionComet(comet);
+                        comets.push(comet);
+                        scene.add(comet);
+                        URL.revokeObjectURL(imageUrl);
+                    });
+                }
+            }
+
+            function positionComet(comet) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius =
+                    cometSystemRadius +
+                    (Math.random() - 0.5) * cometSystemThickness;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                const y = (Math.random() - 0.5) * 1.2;
+                comet.position.set(x, y, z);
+                const scale = Math.random() * 0.5 + 0.5;
+                comet.scale.set(scale, scale, scale);
+                comet.userData = {
+                    angle: angle,
+                    radius: radius,
+                    speed:
+                        (Math.random() * 0.3 + 0.1) *
+                        (Math.random() > 0.5 ? 1 : -1),
+                    opacity: Math.random() * 0.5 + 0.5,
+                    pulseSpeed: Math.random() * 0.02 + 0.01,
+                    pulseDirection: 1,
+                };
+            }
+
+            function handleImageUploads(event) {
+                comets.forEach((c) => scene.remove(c));
+                comets = [];
+                const files = event.target.files;
+                if (files.length === 0) {
+                    createCometSystem();
+                    return;
+                }
+                for (let i = 0; i < 1000; i++) {
+                    const file = files[i % files.length];
+                    const imageUrl = URL.createObjectURL(file);
+                    textureLoader.load(imageUrl, (texture) => {
+                        const material = new THREE.SpriteMaterial({
+                            map: texture,
+                            transparent: true,
+                            opacity: 0.9,
+                        });
+                        const comet = new THREE.Sprite(material);
+                        positionComet(comet);
+                        comets.push(comet);
+                        scene.add(comet);
+                        URL.revokeObjectURL(imageUrl);
+                    });
+                }
+            }
+
+            function createHeartTrail(e) {
+                const heart = document.createElement("div");
+                heart.className = "heart-trail";
+                heart.innerHTML = "❤";
+                document.body.appendChild(heart);
+                const tx = (Math.random() - 0.1) * 100;
+                const ty = (Math.random() - 0.1) * 100;
+                heart.style.setProperty("--tx", `${tx}px`);
+                heart.style.setProperty("--ty", `${ty}px`);
+                heart.style.left = `${e.clientX}px`;
+                heart.style.top = `${e.clientY}px`;
+                setTimeout(() => {
+                    document.body.removeChild(heart);
+                }, 1500);
+            }
+
+            function toggleMusic() {
+                const music = document.getElementById("background-music");
+                const musicControl = document.getElementById("music-control");
+                if (music.paused) {
+                    music.play();
+                    musicControl.innerHTML = "⏸️";
+                } else {
+                    music.pause();
+                    musicControl.innerHTML = "▶️";
+                }
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const delta = 0.009;
+                if (cameraAnimationProgress < 1) {
+                    cameraAnimationProgress += delta;
+                    const point = cameraPath.getPointAt(
+                        cameraAnimationProgress
+                    );
+                    camera.position.copy(point);
+                    camera.lookAt(earth.position);
+                } else if (!animationComplete) {
+                    animationComplete = true;
+                    controls.enabled = true;
+                    controls.autoRotate = true;
+                    controls.autoRotateSpeed = 0.2;
+                }
+
+                if (earth) {
+                    earth.rotation.y += 0.002;
+                    if (earth.children.length > 0) {
+                        earth.children[0].rotation.y -= 0.0005;
+                    }
+                }
+
+                if (sun) {
+                    sun.material.uniforms.time.value += 0.005;
+                }
+
+                // ## Animate Falling Stars ##
+                if (fallingStars) {
+                    const positions =
+                        fallingStars.geometry.attributes.position.array;
+                    const velocities =
+                        fallingStars.geometry.attributes.velocity.array;
+
+                    for (let i = 0; i < positions.length; i += 3) {
+                        positions[i + 1] += velocities[i + 1]; // Update y position
+
+                        // Reset star if it falls out of view
+                        if (positions[i + 1] < -500) {
+                            positions[i + 1] = 1000;
+                        }
+                    }
+                    fallingStars.geometry.attributes.position.needsUpdate = true;
+                }
+
+                textRings.forEach((ringData) => {
+                    ringData.group.rotation.x += ringData.tiltSpeed;
+                    ringData.group.rotation.y += ringData.rotationSpeed;
+                    ringData.group.rotation.z += ringData.tiltSpeed * 0.9;
+                });
+
+                comets.forEach((comet) => {
+                    comet.userData.angle += comet.userData.speed * 0.001;
+                    const radius = comet.userData.radius;
+                    comet.position.x = Math.cos(comet.userData.angle) * radius;
+                    comet.position.z = Math.sin(comet.userData.angle) * radius;
+                    comet.userData.opacity +=
+                        comet.userData.pulseSpeed *
+                        comet.userData.pulseDirection;
+                    if (
+                        comet.userData.opacity > 0.9 ||
+                        comet.userData.opacity < 0.4
+                    ) {
+                        comet.userData.pulseDirection *= -1;
+                    }
+                    if (comet.material) {
+                        comet.material.opacity = comet.userData.opacity;
+                    }
+                });
+
+                heartTrails.forEach((heart) => {
+                    heart.userData.angle += heart.userData.speed;
+                    heart.position.x =
+                        Math.cos(heart.userData.angle) * heart.userData.radius;
+                    heart.position.z =
+                        Math.sin(heart.userData.angle) * heart.userData.radius;
+                    heart.userData.opacity +=
+                        heart.userData.pulseSpeed *
+                        heart.userData.pulseDirection;
+                    if (
+                        heart.userData.opacity > 0.8 ||
+                        heart.userData.opacity < 0.3
+                    ) {
+                        heart.userData.pulseDirection *= -1;
+                    }
+                    heart.material.opacity = heart.userData.opacity;
+                    heart.position.y =
+                        heart.userData.height +
+                        Math.sin(Date.now() * 0.001 + heart.userData.angle) * 2;
+                });
+
+                if (controls.enabled) {
+                    controls.update();
+                }
+                renderer.render(scene, camera);
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        </script>
+    </body>
+</html>
