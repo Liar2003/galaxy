@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="../manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#000000" />
@@ -173,10 +173,10 @@
 
     <div id="heart">❤</div>
     <div id="music-control"></div>
-    <audio id="background-music" src="galaxy.mp3" autoplay loop></audio>
+    <audio id="background-music" src="../galaxy.mp3" autoplay loop></audio>
 
-    <script src="js/three.min.js"></script>
-    <script src="js/OrbitControls.js"></script>
+    <script src="../js/three.min.js"></script>
+    <script src="../js/OrbitControls.js"></script>
     <script id="sunVertexShader" type="x-shader/x-vertex">
       varying vec2 vUv;
       void main() {
@@ -249,7 +249,7 @@
       const textRings = [];
       let earth, sun;
       let comets = [];
-      let stars;
+      let stars, fallingStars;
       let heartTrails = [];
       let cameraPath;
       let cameraAnimationProgress = 0;
@@ -263,9 +263,11 @@
       animate();
 
       function init() {
+        // Scene setup
         scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x0a0a2a, 0.002);
 
+        // Camera setup
         camera = new THREE.PerspectiveCamera(
           75,
           window.innerWidth / window.innerHeight,
@@ -274,6 +276,7 @@
         );
         camera.position.set(0, 5, 10);
 
+        // Renderer setup
         renderer = new THREE.WebGLRenderer({
           antialias: true,
           alpha: true,
@@ -283,6 +286,7 @@
         renderer.setClearColor(0x000000, 0);
         document.body.appendChild(renderer.domElement);
 
+        // Controls setup
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
@@ -290,11 +294,14 @@
         controls.maxDistance = 300;
         controls.enabled = false;
 
+        // Lighting
         const ambientLight = new THREE.AmbientLight(0x333344, 0.8);
         scene.add(ambientLight);
 
+        // Create objects
         createSun();
         createStars();
+
         createShootingStars();
         createEarth();
         createTextRings();
@@ -302,21 +309,27 @@
         createHearts();
         createCameraPath();
 
+        // Event listeners
         window.addEventListener("resize", onWindowResize, false);
+        // document.getElementById('imageUpload').addEventListener('change', handleImageUploads);
         document.addEventListener("mousemove", createHeartTrail);
         document
           .getElementById("music-control")
           .addEventListener("click", toggleMusic);
 
+        // Autoplay music handler
         document.addEventListener("DOMContentLoaded", () => {
           const music = document.getElementById("background-music");
           const control = document.getElementById("music-control");
+
+          // Try autoplay immediately
           music
             .play()
             .then(() => {
-              control.innerHTML = "";
+              control.innerHTML = ""; // Playing
             })
             .catch(() => {
+              // Autoplay blocked — wait for user click
               document.body.addEventListener(
                 "click",
                 () => {
@@ -333,10 +346,10 @@
 
       function createCameraPath() {
         cameraPath = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 0, 10),
+          new THREE.Vector3(0, 0, 10), // Start near Earth
           new THREE.Vector3(0, 0, 15),
           new THREE.Vector3(0, 0, 25),
-          new THREE.Vector3(0, 1, 35),
+          new THREE.Vector3(0, 1, 35), // Move through comets
           new THREE.Vector3(0, 10, 40),
         ]);
       }
@@ -687,7 +700,7 @@
                 rotation: new THREE.Euler(Math.PI / 8, Math.PI / 8, 0),
               },
               {
-                text: " .EFIL LUFTUAEB SIHT NI REVEROF YM DNA ,MROTS EHT NI MLAC YM ,NIAR EHT NI ENIHSNUS YM ERA UOY",
+                text: "ESIRNUS YREVE HTIW REPEED SWORG TAHT EVOL FO DNIK EHT DNA ,HTMRAM ,RETHGUAL HTIW NEEB SAH EFIL YM ,YAD TAHT MORF DNA ,03.8.1202 NO YENRUOJ SIHT NAGEB EW",
                 radius: 8,
                 color: 0x98fb98,
                 rotation: new THREE.Euler(Math.PI / 2, -Math.PI / 2, 0),
@@ -709,10 +722,15 @@
       function createCometSystem() {
         const cometCount = 2000;
         const files = [
-          "assets/1.jpeg",
-          "assets/2.jpeg",
-          "assets/3.jpeg",
-          "assets/4.jpeg",
+          "assets/1.jpg",
+          "assets/2.jpg",
+          "assets/3.jpg",
+          "assets/4.jpg",
+          "assets/5.jpg",
+          "assets/6.jpg",
+          "assets/7.jpg",
+          "assets/8.jpg",
+          "assets/9.jpg",
         ];
         for (let i = 0; i < cometCount; i++) {
           const imageUrl = files[i % files.length];
@@ -808,7 +826,7 @@
       function animate() {
         requestAnimationFrame(animate);
 
-        const delta = 0.009;
+        const delta = 0.0099;
         if (cameraAnimationProgress < 1) {
           cameraAnimationProgress += delta;
           const point = cameraPath.getPointAt(cameraAnimationProgress);
@@ -831,7 +849,6 @@
         if (sun) {
           sun.material.uniforms.time.value += 0.005;
         }
-
         shootingStars.forEach((star) => {
           star.position.add(star.userData.velocity);
           if (
@@ -843,10 +860,26 @@
           }
         });
 
+        // ## Animate Falling Stars ##
+        if (fallingStars) {
+          const positions = fallingStars.geometry.attributes.position.array;
+          const velocities = fallingStars.geometry.attributes.velocity.array;
+
+          for (let i = 0; i < positions.length; i += 3) {
+            positions[i + 1] += velocities[i + 1]; // Update y position
+
+            // Reset star if it falls out of view
+            if (positions[i + 1] < -500) {
+              positions[i + 1] = 1000;
+            }
+          }
+          fallingStars.geometry.attributes.position.needsUpdate = true;
+        }
+
         textRings.forEach((ringData) => {
           ringData.group.rotation.x += ringData.tiltSpeed;
           ringData.group.rotation.y += ringData.rotationSpeed;
-          ringData.group.rotation.z += ringData.tiltSpeed * 0.9;
+          ringData.group.rotation.z += ringData.tiltSpeed * 0.1;
         });
 
         comets.forEach((comet) => {
