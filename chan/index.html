@@ -817,7 +817,7 @@
         requestAnimationFrame(animate);
 
         const delta = 0.0099;
-        if (cameraAnimationProgress < 1) {
+        if (cameraAnimationProgress < 0.9999) {
           cameraAnimationProgress += delta;
           const point = cameraPath.getPointAt(cameraAnimationProgress);
           camera.position.copy(point);
