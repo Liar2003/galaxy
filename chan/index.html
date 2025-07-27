@@ -721,12 +721,7 @@
 
       function createCometSystem() {
         const cometCount = 1000;
-        const files = [
-          "assets/1.jpg",
-          "assets/2.jpg",
-          "assets/3.jpg",
-          "assets/4.jpg",
-        ];
+        const files = ["assets/1.jpg", "assets/3.jpg", "assets/4.jpg"];
         for (let i = 0; i < cometCount; i++) {
           const imageUrl = files[i % files.length];
           textureLoader.load(imageUrl, (texture) => {
@@ -855,28 +850,6 @@
           }
         });
 
-        // ## Animate Falling Stars ##
-        if (fallingStars) {
-          const positions = fallingStars.geometry.attributes.position.array;
-          const velocities = fallingStars.geometry.attributes.velocity.array;
-
-          for (let i = 0; i < positions.length; i += 3) {
-            positions[i + 1] += velocities[i + 1]; // Update y position
-
-            // Reset star if it falls out of view
-            if (positions[i + 1] < -500) {
-              positions[i + 1] = 1000;
-            }
-          }
-          fallingStars.geometry.attributes.position.needsUpdate = true;
-        }
-
-        textRings.forEach((ringData) => {
-          ringData.group.rotation.x += ringData.tiltSpeed;
-          ringData.group.rotation.y += ringData.rotationSpeed;
-          ringData.group.rotation.z += ringData.tiltSpeed * 0.1;
-        });
-
         comets.forEach((comet) => {
           comet.userData.angle += comet.userData.speed * 0.001;
           const radius = comet.userData.radius;
@@ -890,6 +863,12 @@
           if (comet.material) {
             comet.material.opacity = comet.userData.opacity;
           }
+        });
+
+        textRings.forEach((ringData) => {
+          ringData.group.rotation.x += ringData.tiltSpeed;
+          ringData.group.rotation.y += ringData.rotationSpeed;
+          ringData.group.rotation.z += ringData.tiltSpeed * 0.1;
         });
 
         heartTrails.forEach((heart) => {
@@ -908,7 +887,16 @@
             heart.userData.height +
             Math.sin(Date.now() * 0.001 + heart.userData.angle) * 2;
         });
-
+        shootingStars.forEach((star) => {
+          star.position.add(star.userData.velocity);
+          if (
+            star.position.y < -300 ||
+            Math.abs(star.position.x) > 500 ||
+            Math.abs(star.position.z) > 500
+          ) {
+            resetShootingStar(star);
+          }
+        });
         if (controls.enabled) {
           controls.update();
         }
