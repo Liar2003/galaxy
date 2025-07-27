@@ -256,8 +256,8 @@
       let animationComplete = false;
       let shootingStars = [];
 
-      const cometSystemRadius = 18;
-      const cometSystemThickness = 10;
+      const cometSystemRadius = 15;
+      const cometSystemThickness = 9;
 
       init();
       animate();
@@ -688,7 +688,7 @@
           (font) => {
             const ringData = [
               {
-                text: ".YAD ELGNIS HCAE EURT EMOC MAERD YM YOJ YM ,ECAEP YM ER’UOY — LUOS RUOY ,ECIOV RUOY ,ELIMS ROUY EVOL I",
+                text: "EMOH REVEREF YM TRAEH YM DNA THGIL YM EMACEB ELIMS RUOY EREHW ,ENIGAMI DLUOC I YROTS EVOL LUFTUAEB TSOM EHT NI RETPAHC A NEEB SAH UOY HTIW TNEMOM YREVE ,03.8.1202 ECNIS",
                 radius: 7,
                 color: 0xff6ec4,
                 rotation: new THREE.Euler(0, 0, 0),
@@ -720,17 +720,12 @@
       }
 
       function createCometSystem() {
-        const cometCount = 2000;
+        const cometCount = 1000;
         const files = [
           "assets/1.jpg",
           "assets/2.jpg",
           "assets/3.jpg",
           "assets/4.jpg",
-          "assets/5.jpg",
-          "assets/6.jpg",
-          "assets/7.jpg",
-          "assets/8.jpg",
-          "assets/9.jpg",
         ];
         for (let i = 0; i < cometCount; i++) {
           const imageUrl = files[i % files.length];
